@@ -9,6 +9,9 @@ const taskInput = document.querySelector('#task') ;
 loadEventListeners() ;
 
 function loadEventListeners() {
+  // Add DOMContentLoaded event to docuemnt.
+  document.addEventListener('DOMContentLoaded', getTasks) ;
+
   // Add task event.
   form.addEventListener('submit', addTask) ;
 
@@ -20,6 +23,37 @@ function loadEventListeners() {
 
   // Filter task event.
   filter.addEventListener('keyup', filterTasks) ;
+}
+
+// Get all tasks from LocalStorage.
+function getTasks() {
+  let tasks ;
+  if ( localStorage.getItem('tasks') === null ) {
+    tasks = [] ;
+  } else {
+    tasks = JSON.parse( localStorage.getItem('tasks') ) ;
+  }
+
+  tasks.forEach( function( task ) {
+    // create li tag.
+    const li = document.createElement( 'li' ) ;
+
+    // Add class
+    li.classList.add( 'collection-item' ) ;
+
+    // create text and append to li
+    li.appendChild( document.createTextNode( task ) ) ;
+
+    // Create new link element.
+    const link = document.createElement( 'a' ) ;
+    link.classList.add( 'delete-item', 'secondary-content' ) ;
+    link.innerHTML = '<i class="fa fa-remove"></i>' ;
+    li.appendChild( link ) ;
+
+    // append li to ul.
+    taskList.appendChild( li ) ;
+  } ) ;
+
 }
 
 function addTask(e) {
@@ -46,10 +80,25 @@ function addTask(e) {
   // append li to ul.
   taskList.appendChild( li ) ;
 
+  // Add task to LocalStorage.
+  storeTaskInLocalStorage(taskInput.value) ;
+
   // clear task input.
   taskInput.value = '' ;
 
   e.preventDefault() ;
+}
+
+// Store task to local LocalStorage
+function storeTaskInLocalStorage(task) {
+  let tasks ;
+  if ( localStorage.getItem('tasks') === null ) {
+    tasks = [] ;
+  } else {
+    tasks = JSON.parse( localStorage.getItem('tasks') ) ;
+  }
+  tasks.push( task ) ;
+  localStorage.setItem( 'tasks', JSON.stringify(tasks) ) ;
 }
 
 // Remove task
@@ -57,8 +106,25 @@ function removeTask(e) {
   if ( e.target.parentElement.classList.contains('delete-item') ) {
     if ( confirm('Are you sure?') ) {
       e.target.parentElement.parentElement.remove() ;
+      removeTaskFromLocalStorage( e.target.parentElement.parentElement ) ;
     }
   }
+}
+
+// Remove task from LS
+function removeTaskFromLocalStorage( taskItem ) {
+  let tasks ;
+  if ( localStorage.getItem('tasks') === null ) {
+    tasks = [] ;
+  } else {
+    tasks = JSON.parse( localStorage.getItem('tasks') ) ;
+  }
+  tasks.forEach( function( task, index ) {
+    if ( taskItem.textContent === task ) {
+      tasks.splice( index, 1 ) ;
+    }
+  } ) ;
+  localStorage.setItem( 'tasks', JSON.stringify( tasks ) ) ;
 }
 
 // Clear al tasks.
@@ -70,6 +136,14 @@ function clearTasks(e) {
   while( taskList.firstChild ) {
     taskList.removeChild( taskList.firstChild ) ;
   }
+
+  // Clear tasks from LocalStorage.
+  clearTasksFromLocalStorage() ;
+
+}
+
+function clearTasksFromLocalStorage() {
+  localStorage.clear() ;
 }
 
 function filterTasks(e) {
